@@ -4,6 +4,7 @@ import { TransactionStatus } from "genlayer-js/types";
 import {
   readableWalletError,
   requestAccountPicker,
+  revokeAccountPermission,
   switchToStudionet,
 } from "./wallet.js";
 import "./styles.css";
@@ -51,6 +52,13 @@ async function connectWallet() {
     txTitle.textContent = "Switching network";
     txOutput.textContent = "Approve GenLayer Studionet in your wallet.";
     await switchToStudionet(window.ethereum);
+
+    const changingWallet = Boolean(walletAddress);
+    if (changingWallet) {
+      txTitle.textContent = "Choose wallet";
+      txOutput.textContent = "Approve account reset, then pick the wallet to use.";
+      await revokeAccountPermission(window.ethereum);
+    }
 
     await requestAccountPicker(window.ethereum);
     const [address] = await window.ethereum.request({
@@ -166,8 +174,11 @@ function handleAccountsChanged(accounts) {
 }
 
 function handleChainChanged() {
-  if (walletAddress) {
-    connectWallet();
+  if (walletAddress && window.ethereum) {
+    switchToStudionet(window.ethereum).catch(() => {
+      txTitle.textContent = "Wrong network";
+      txOutput.textContent = "Switch back to GenLayer Studionet in your wallet.";
+    });
   }
 }
 
@@ -186,7 +197,13 @@ function setConnectedWallet(address) {
     "Connected to GenLayer Studionet. You can submit an attestation.";
 }
 
-function disconnectWallet() {
+async function disconnectWallet() {
+  if (window.ethereum) {
+    try {
+      await revokeAccountPermission(window.ethereum);
+    } catch {
+    }
+  }
   setDisconnectedWallet();
   txTitle.textContent = "Disconnected";
   txOutput.textContent =

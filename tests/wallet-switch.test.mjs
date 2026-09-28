@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   requestAccountPicker,
+  revokeAccountPermission,
   STUDIONET,
   switchToStudionet,
 } from "../src/wallet.js";
@@ -60,6 +61,28 @@ await requestAccountPicker({
   request: async () => {
     const error = new Error("Unsupported");
     error.code = -32601;
+    throw error;
+  },
+});
+
+const revokeCalls = [];
+await revokeAccountPermission({
+  request: async (payload) => {
+    revokeCalls.push(payload);
+  },
+});
+
+assert.deepEqual(revokeCalls, [
+  {
+    method: "wallet_revokePermissions",
+    params: [{ eth_accounts: {} }],
+  },
+]);
+
+await revokeAccountPermission({
+  request: async () => {
+    const error = new Error("Unsupported");
+    error.code = -32004;
     throw error;
   },
 });

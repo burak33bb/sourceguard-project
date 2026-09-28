@@ -40,6 +40,19 @@ export async function requestAccountPicker(provider) {
   }
 }
 
+export async function revokeAccountPermission(provider) {
+  try {
+    await provider.request({
+      method: "wallet_revokePermissions",
+      params: [{ eth_accounts: {} }],
+    });
+  } catch (error) {
+    if (error?.code !== -32601 && error?.code !== -32004) {
+      throw error;
+    }
+  }
+}
+
 export function readableWalletError(error) {
   if (error?.code === 4001) {
     return "Wallet request was rejected.";
