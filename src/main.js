@@ -1,7 +1,11 @@
 import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
-import { readableWalletError, switchToStudionet } from "./wallet.js";
+import {
+  readableWalletError,
+  requestAccountPicker,
+  switchToStudionet,
+} from "./wallet.js";
 import "./styles.css";
 
 const CONTRACT_ADDRESS = "0x326bC3E58Ea37bd288E4B15DF6848706C3ec5E4A";
@@ -15,6 +19,7 @@ let latestReport = "";
 
 const walletTitle = document.querySelector("#wallet-title");
 const connectButton = document.querySelector("#connect-wallet");
+const disconnectButton = document.querySelector("#disconnect-wallet");
 const submitButton = document.querySelector("#submit-attestation");
 const readButton = document.querySelector("#read-latest");
 const txTitle = document.querySelector("#tx-title");
@@ -24,9 +29,16 @@ const readOutput = document.querySelector("#read-output");
 const copyReportButton = document.querySelector("#copy-report");
 
 connectButton.addEventListener("click", connectWallet);
+disconnectButton.addEventListener("click", disconnectWallet);
 submitButton.addEventListener("click", submitAttestation);
 readButton.addEventListener("click", readLatestReport);
 copyReportButton.addEventListener("click", copyLatestReport);
+
+if (window.ethereum) {
+  window.ethereum.on?.("accountsChanged", handleAccountsChanged);
+  window.ethereum.on?.("chainChanged", handleChainChanged);
+  syncExistingWallet();
+}
 
 async function connectWallet() {
   try {
@@ -40,26 +52,16 @@ async function connectWallet() {
     txOutput.textContent = "Approve GenLayer Studionet in your wallet.";
     await switchToStudionet(window.ethereum);
 
+    await requestAccountPicker(window.ethereum);
     const [address] = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
-    walletAddress = address;
-    writeClient = createClient({
-      chain: studionet,
-      account: walletAddress,
-      provider: window.ethereum,
-    });
-
-    walletTitle.textContent = shortAddress(walletAddress);
-    txTitle.textContent = "Wallet ready";
-    txOutput.textContent =
-      "Connected to GenLayer Studionet. You can submit an attestation.";
+    setConnectedWallet(address);
     return true;
   } catch (error) {
-    walletTitle.textContent = "Not connected";
+    setDisconnectedWallet();
     txTitle.textContent = "Wallet blocked";
     txOutput.textContent = readableWalletError(error);
-    writeClient = null;
     return false;
   }
 }
@@ -142,6 +144,61 @@ async function copyLatestReport() {
   window.setTimeout(() => {
     copyReportButton.textContent = "Copy";
   }, 1200);
+}
+
+async function syncExistingWallet() {
+  try {
+    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    if (accounts.length > 0) {
+      setConnectedWallet(accounts[0]);
+    }
+  } catch {
+    setDisconnectedWallet();
+  }
+}
+
+function handleAccountsChanged(accounts) {
+  if (accounts.length === 0) {
+    disconnectWallet();
+    return;
+  }
+  setConnectedWallet(accounts[0]);
+}
+
+function handleChainChanged() {
+  if (walletAddress) {
+    connectWallet();
+  }
+}
+
+function setConnectedWallet(address) {
+  walletAddress = address;
+  writeClient = createClient({
+    chain: studionet,
+    account: walletAddress,
+    provider: window.ethereum,
+  });
+  walletTitle.textContent = shortAddress(walletAddress);
+  connectButton.textContent = "Change wallet";
+  disconnectButton.hidden = false;
+  txTitle.textContent = "Wallet ready";
+  txOutput.textContent =
+    "Connected to GenLayer Studionet. You can submit an attestation.";
+}
+
+function disconnectWallet() {
+  setDisconnectedWallet();
+  txTitle.textContent = "Disconnected";
+  txOutput.textContent =
+    "Wallet cleared in this app. Use Change wallet to pick another account.";
+}
+
+function setDisconnectedWallet() {
+  walletAddress = "";
+  writeClient = null;
+  walletTitle.textContent = "Not connected";
+  connectButton.textContent = "Connect wallet";
+  disconnectButton.hidden = true;
 }
 
 function shortAddress(address) {

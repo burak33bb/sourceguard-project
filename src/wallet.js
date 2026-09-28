@@ -27,6 +27,19 @@ export async function switchToStudionet(provider) {
   }
 }
 
+export async function requestAccountPicker(provider) {
+  try {
+    await provider.request({
+      method: "wallet_requestPermissions",
+      params: [{ eth_accounts: {} }],
+    });
+  } catch (error) {
+    if (error?.code !== -32601 && error?.code !== -32004) {
+      throw error;
+    }
+  }
+}
+
 export function readableWalletError(error) {
   if (error?.code === 4001) {
     return "Wallet request was rejected.";

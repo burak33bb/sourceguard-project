@@ -44,6 +44,7 @@ a {
 .button-row,
 .brand,
 .top-actions,
+.wallet-actions,
 .signal-grid {
   display: grid;
 }
@@ -85,6 +86,11 @@ a {
 }
 
 .top-actions {
+  grid-auto-flow: column;
+  gap: 10px;
+}
+
+.wallet-actions {
   grid-auto-flow: column;
   gap: 10px;
 }
@@ -292,6 +298,10 @@ button:disabled {
   opacity: 0.55;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .output-grid {
   gap: 18px;
   margin-top: 18px;
@@ -329,6 +339,7 @@ pre {
   .output-grid,
   .field-row,
   .button-row,
+  .wallet-actions,
   .signal-grid {
     grid-template-columns: 1fr;
   }

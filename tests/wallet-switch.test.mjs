@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { STUDIONET, switchToStudionet } from "../src/wallet.js";
+import {
+  requestAccountPicker,
+  STUDIONET,
+  switchToStudionet,
+} from "../src/wallet.js";
 
 const switchOnlyCalls = [];
 await switchToStudionet({
@@ -37,5 +41,27 @@ assert.deepEqual(addAfterMissingCalls, [
     params: [STUDIONET],
   },
 ]);
+
+const pickerCalls = [];
+await requestAccountPicker({
+  request: async (payload) => {
+    pickerCalls.push(payload);
+  },
+});
+
+assert.deepEqual(pickerCalls, [
+  {
+    method: "wallet_requestPermissions",
+    params: [{ eth_accounts: {} }],
+  },
+]);
+
+await requestAccountPicker({
+  request: async () => {
+    const error = new Error("Unsupported");
+    error.code = -32601;
+    throw error;
+  },
+});
 
 console.log("wallet switch flow ok");
