@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SourceGuard</title>
+    <meta
+      name="description"
+      content="A GenLayer-powered claim verification workspace."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="14" fill="%230b1f2a"/%3E%3Cpath d="M16 35 29 12l19 40H18l9-15 5 10h8L28 23 18 40h10l-4 7H10Z" fill="%23e7f7ef"/%3E%3Ccircle cx="45" cy="18" r="6" fill="%2337d67a"/%3E%3C/svg%3E'
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <div class="intro">
+          <p class="eyebrow">GenLayer Project</p>
+          <h1>SourceGuard</h1>
+          <p>
+            Verify a claim with source URLs, then store a consensus-backed
+            attestation on GenLayer.
+          </p>
+          <div class="contract-strip">
+            <span>Contract</span>
+            <code>0x326b...5E4A</code>
+            <a
+              href="https://explorer-studio.genlayer.com/address/0x326bC3E58Ea37bd288E4B15DF6848706C3ec5E4A"
+              target="_blank"
+              rel="noreferrer"
+              >Explorer</a
+            >
+          </div>
+        </div>
+
+        <form class="panel" id="claim-form">
+          <label>
+            Claim
+            <textarea
+              id="claim"
+              rows="4"
+              placeholder="The genlayer-py SDK includes calldata encoding utilities."
+            ></textarea>
+          </label>
+          <label>
+            Source URL
+            <input
+              id="source-one"
+              type="url"
+              placeholder="https://github.com/genlayerlabs/genlayer-py"
+            />
+          </label>
+          <div class="split">
+            <label>
+              Optional source
+              <input id="source-two" type="url" placeholder="https://..." />
+            </label>
+            <label>
+              Optional source
+              <input id="source-three" type="url" placeholder="https://..." />
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit">Prepare attestation</button>
+            <button type="button" class="ghost" id="read-latest">
+              Read latest report
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="result-grid">
+        <article class="result-card">
+          <div>
+            <p class="label">Prepared call</p>
+            <h2 id="prepared-title">Waiting for claim</h2>
+          </div>
+          <pre id="prepared-output">Submit the form to build the contract call.</pre>
+          <a
+            class="link-button"
+            href="https://studio.genlayer.com"
+            target="_blank"
+            rel="noreferrer"
+            >Open in Studio</a
+          >
+        </article>
+
+        <article class="result-card">
+          <div>
+            <p class="label">Live read</p>
+            <h2 id="read-title">Not checked</h2>
+          </div>
+          <pre id="read-output">Read latest report queries the deployed contract through GenLayer Studio RPC.</pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
