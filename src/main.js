@@ -1,6 +1,7 @@
 import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
+import { readableWalletError, switchToStudionet } from "./wallet.js";
 import "./styles.css";
 
 const CONTRACT_ADDRESS = "0x326bC3E58Ea37bd288E4B15DF6848706C3ec5E4A";
@@ -28,32 +29,46 @@ readButton.addEventListener("click", readLatestReport);
 copyReportButton.addEventListener("click", copyLatestReport);
 
 async function connectWallet() {
-  if (!window.ethereum) {
-    walletTitle.textContent = "Wallet missing";
-    txOutput.textContent = "Install MetaMask or another EIP-1193 wallet.";
-    return;
+  try {
+    if (!window.ethereum) {
+      walletTitle.textContent = "Wallet missing";
+      txOutput.textContent = "Install MetaMask or another EIP-1193 wallet.";
+      return false;
+    }
+
+    txTitle.textContent = "Switching network";
+    txOutput.textContent = "Approve GenLayer Studionet in your wallet.";
+    await switchToStudionet(window.ethereum);
+
+    const [address] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    walletAddress = address;
+    writeClient = createClient({
+      chain: studionet,
+      account: walletAddress,
+      provider: window.ethereum,
+    });
+
+    walletTitle.textContent = shortAddress(walletAddress);
+    txTitle.textContent = "Wallet ready";
+    txOutput.textContent =
+      "Connected to GenLayer Studionet. You can submit an attestation.";
+    return true;
+  } catch (error) {
+    walletTitle.textContent = "Not connected";
+    txTitle.textContent = "Wallet blocked";
+    txOutput.textContent = readableWalletError(error);
+    writeClient = null;
+    return false;
   }
-
-  const [address] = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
-  walletAddress = address;
-  writeClient = createClient({
-    chain: studionet,
-    account: walletAddress,
-    provider: window.ethereum,
-  });
-
-  await writeClient.connect("studionet");
-  walletTitle.textContent = shortAddress(walletAddress);
-  txTitle.textContent = "Wallet ready";
-  txOutput.textContent = "Connected to Studionet. You can submit an attestation.";
 }
 
 async function submitAttestation() {
   try {
     if (!writeClient) {
-      await connectWallet();
+      const connected = await connectWallet();
+      if (!connected) return;
     }
 
     const claim = document.querySelector("#claim").value.trim();
